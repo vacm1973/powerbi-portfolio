@@ -1,0 +1,16 @@
+-- Cálculo de Crecimiento Year-Over-Year (YoY) optimizado con variables
+Sales YoY Growth % = 
+VAR CurrentYearSales = [Total Sales]
+VAR PriorYearSales = 
+    CALCULATE(
+        [Total Sales],
+        SAMEPERIODLASTYEAR('Calendar'[Date])
+    )
+VAR Result = 
+    DIVIDE(
+        CurrentYearSales - PriorYearSales,
+        PriorYearSales,
+        0
+    )
+RETURN
+    Result
