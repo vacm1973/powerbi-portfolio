@@ -1,18 +1,33 @@
-# powerbi-portfolio
-Power BI & Data Architecture Portfolio
+# 📊 Power BI & Advanced Business Intelligence Portfolio
 
-Bienvenido a mi portfolio técnico. Aquí comparto ejemplos seleccionados de mi experiencia en modelado de datos, optimización de medidas DAX complejas, seguridad a nivel de fila (RLS) y automatización de procesos ETL con SQL y Power Query.
+> **`Power BI` | `DAX` | `Dimensional Modeling` | `Row-Level Security (RLS)` | `T-SQL`**
 
-## 🛠️ Competencias Técnicas Demostradas
-- **Modelado de Datos:** Diseño de esquemas en estrella (*Star Schema*), optimización de relaciones y reducción de cardinalidad.
-- **DAX Avanzado:** Uso de variables (`VAR`), funciones de inteligencia de tiempo y cálculos dinámicos de alto rendimiento.
-- **Seguridad (RLS):** Implementación de seguridad dinámica a nivel de fila basada en usuarios.
-- **Ingeniería de Datos & SQL:** Consultas avanzadas con CTEs, funciones de ventana y optimización de rendimiento (`EXPLAIN`).
+A comprehensive Business Intelligence solution featuring advanced DAX time intelligence, star-schema dimensional modeling, dynamic Row-Level Security (RLS), and automated ETL pipelines with SQL and Power Query.
 
 ---
 
-## 📌 Contenido del Portfolio
-1. [Optimización de Medidas DAX](./dax/time_intelligence.dax)
-2. [Implementación de Seguridad RLS](./dax/row_level_security.dax)
-3. [Consultas SQL para Conciliación Logística](./sql/logistics_reconciliation.sql)
-4. [Transformaciones en Power Query (M Query)](./powerquery/logistics_transformations.pq)
+## 🏗️ Architecture & Technical Stack
+
+- **BI & Visualization:** Power BI Service, Power BI Desktop, Advanced DAX, Power Query (M Query).
+- **Data Modeling:** Star Schema Design, Cardinality Optimization, Dynamic Row-Level Security (RLS).
+- **Data Engineering & SQL:** T-SQL, Stored Procedures, CTEs, Window Functions, Performance Tuning.
+- **Tools & Governance:** Git, GitHub, SQL Server Management Studio (SSMS), Azure Data Studio.
+
+---
+
+## 📂 Repository Structure
+
+```text
+powerbi-portfolio/
+│
+├── README.md               # Portfolio documentation and technical overview
+├── assets/                 # Dashboard previews, architecture diagrams, and mockups
+├── dax/                    # Advanced DAX measures and security logic
+│   ├── time_intelligence_logistics.dax
+│   └── row_level_security.dax
+├── sql/                    # Advanced SQL scripts, ETL transformations, and dummy data setup
+│   ├── logistics_reconciliation.sql
+│   ├── logistics_transformations.sql
+│   └── insert_dummy_data.sql
+└── powerquery/             # ETL cleaning and transformation scripts (M Query)
+    └── logistics_transformations.pq
