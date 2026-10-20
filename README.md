@@ -1,4 +1,3 @@
-Markdown
 [← Back to Main Profile](https://github.com/vacm1973/vacm1973)
 
 ---
