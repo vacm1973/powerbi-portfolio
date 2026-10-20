@@ -15,24 +15,17 @@ A comprehensive Business Intelligence solution featuring advanced DAX time intel
 - **Tools & Governance:** Git, GitHub, SQL Server Management Studio (SSMS), Azure Data Studio.
 
 ---
+## 🗂️ Repository Navigation & Directory Structure
 
-## 📂 Repository Structure
+You can explore the technical components and resources of this portfolio through the following sections:
 
-```text
-powerbi-portfolio/
-│
-├── README.md               # Portfolio documentation and technical overview
-├── assets/                 # Dashboard previews, architecture diagrams, and mockups
-├── dax/                    # Advanced DAX measures and security logic
-│   ├── time_intelligence_logistics.dax
-│   └── row_level_security.dax
-├── sql/                    # Advanced SQL scripts, ETL transformations, and dummy data setup
-│   ├── logistics_reconciliation.sql
-│   ├── logistics_transformations.sql
-│   └── insert_dummy_data.sql
-└── powerquery/             # ETL cleaning and transformation scripts (M Query)
-    └── logistics_transformations.pq
-```
+| Directory / Folder | Description & Key Contents | Direct Link |
+| :--- | :--- | :--- |
+| 📁 **`assets/`** | Visual aids, dashboard previews, and architecture diagrams. | [Explore Assets](./assets/) |
+| 📁 **`dax/`** | Advanced DAX formulas, time intelligence, and dynamic RLS logic. | [View DAX Code](./dax/) |
+| 📁 **`sql/`** | T-SQL scripts, automated data reconciliation, and mock data setup. | [View SQL Scripts](./sql/) |
+| 📁 **`powerquery/`** | ETL data cleaning and transformation workflows (M Query). | [View Power Query](./powerquery/) |
+
 ---
 
 **Victor Andres Costa Molina**
