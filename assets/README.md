@@ -5,6 +5,6 @@ This directory stores visual resources used throughout the repository documentat
 ## 📁 Expected Contents:
 - Architecture flow diagrams (`.png` / `.svg`)
 - Star schema data model layouts
-- Power BI report UI previews
+
 
 [← Back to Main Repository](../README.md)
