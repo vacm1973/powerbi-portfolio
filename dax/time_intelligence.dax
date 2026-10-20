@@ -1,15 +1,20 @@
--- Cálculo de Crecimiento Year-Over-Year (YoY) optimizado con variables
-Sales YoY Growth % = 
-VAR CurrentYearSales = [Total Sales]
-VAR PriorYearSales = 
+-- =====================================================================
+-- Project: Advanced DAX Time Intelligence
+-- Description: Optimized Year-Over-Year freight cost growth measure 
+--              using variables (VAR) for high performance.
+-- =====================================================================
+
+Freight Cost YoY Growth % = 
+VAR CurrentYearCost = [Total Freight Cost]
+VAR PriorYearCost = 
     CALCULATE(
-        [Total Sales],
+        [Total Freight Cost],
         SAMEPERIODLASTYEAR('Calendar'[Date])
     )
 VAR Result = 
     DIVIDE(
-        CurrentYearSales - PriorYearSales,
-        PriorYearSales,
+        CurrentYearCost - PriorYearCost,
+        PriorYearCost,
         0
     )
 RETURN
