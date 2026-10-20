@@ -1,20 +1,35 @@
--- Uso de CTEs y funciones de ventana para conciliación de facturas logísticas
-WITH RankedInvoices AS (
+-- =====================================================================
+-- Project: Automated Freight Invoice Reconciliation
+-- Engine: T-SQL / SQL Server
+-- Description: Uses CTEs and window functions to compare billed freight 
+--              invoices against pre-established carrier contracts.
+-- =====================================================================
+
+WITH LatestContractRates AS (
     SELECT 
-        InvoiceID,
         CarrierID,
-        ShipmentDate,
-        BilledAmount,
-        ContractRate,
-        ROW_NUMBER() OVER (PARTITION BY CarrierID ORDER BY ShipmentDate DESC) as rn
-    FROM LogisticsTransactions
-    WHERE Status = 'Processed'
+        RouteID,
+        AgreedRate,
+        EffectiveDate,
+        ROW_NUMBER() OVER (PARTITION BY CarrierID, RouteID ORDER BY EffectiveDate DESC) as rn
+    FROM ContractsMaster
 )
 SELECT 
-    InvoiceID,
-    CarrierID,
-    BilledAmount,
-    ContractRate,
-    (BilledAmount - ContractRate) AS Variance
-FROM RankedInvoices
-WHERE rn = 1 AND BilledAmount <> ContractRate;
+    t.InvoiceID,
+    t.CarrierID,
+    t.RouteID,
+    t.ShipmentDate,
+    t.BilledAmount,
+    c.AgreedRate,
+    (t.BilledAmount - c.AgreedRate) AS CostVariance,
+    CASE 
+        WHEN t.BilledAmount > c.AgreedRate THEN 'Overbilled'
+        WHEN t.BilledAmount < c.AgreedRate THEN 'Underbilled'
+        ELSE 'Matched'
+    END AS ReconciliationStatus
+FROM LogisticsTransactions t
+INNER JOIN LatestContractRates c 
+    ON t.CarrierID = c.CarrierID 
+    AND t.RouteID = c.RouteID 
+    AND c.rn = 1
+WHERE t.Status = 'Processed';
