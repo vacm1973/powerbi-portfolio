@@ -1,11 +1,11 @@
 -- =====================================================================
--- Proyecto: Pipeline de Transformación y Limpieza de Datos Logísticos
--- Motor: T-SQL / SQL Server
--- Descripción: Script ETL para normalizar registros de tráfico, fletes 
---              y métricas de entrega antes de consumirlas en Power BI.
+-- Project: Logistics Data Transformation and Cleaning Pipeline
+-- Engine: T-SQL / SQL Server
+-- Description: ETL script to normalize shipment traffic, freight, 
+--              and delivery performance metrics prior to Power BI consumption.
 -- =====================================================================
 
--- 1. Crear tabla intermedia limpia para reportes analíticos
+-- 1. Drop staging table if it already exists
 IF OBJECT_ID('dbo.Stg_LogisticsCleanedData', 'U') IS NOT NULL
     DROP TABLE dbo.Stg_LogisticsCleanedData;
 
@@ -22,7 +22,7 @@ CREATE TABLE dbo.Stg_LogisticsCleanedData (
     DataQualityFlag VARCHAR(20)
 );
 
--- 2. Inserción con transformaciones, limpieza de nulos y estandarización de texto
+-- 2. Insert data with transformations, null handling, and text standardization
 INSERT INTO dbo.Stg_LogisticsCleanedData
 SELECT 
     TRIM(ShipmentTrackingNumber) AS TrackingNumber,
@@ -45,7 +45,7 @@ FROM RawShipmentLogs
 WHERE ShipmentTrackingNumber IS NOT NULL 
   AND DispatchTimestamp >= '2025-01-01';
 
--- 3. Validación y consulta de resumen de calidad de datos procesados
+-- 3. Validate and query processed data quality summary
 SELECT 
     DataQualityFlag,
     COUNT(*) AS TotalShipments,
