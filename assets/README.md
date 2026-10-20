@@ -1,9 +1,10 @@
-# 📂 DAX Measures & Security Logic
+# 📂 Portfolio Assets & Visual Documentation
 
-This directory contains advanced Data Analysis Expressions (DAX) scripts designed for high-performance semantic models in Power BI.
+This directory stores visual resources used throughout the repository documentation, including architecture diagrams, star schema models, and dashboard mockups.
 
-## 📄 Included Files:
-- **`time_intelligence_logistics.dax`**: Optimized year-over-year (YoY) calculations using variables (`VAR`) to prevent context evaluation overhead.
-- **`row_level_security.dax`**: Dynamic Row-Level Security (RLS) script filtering multi-tenant data securely via user principal mapping.
+## 📁 Expected Contents:
+- Architecture flow diagrams (`.png` / `.svg`)
+- Star schema data model layouts
+- Power BI report UI previews
 
 [← Back to Main Repository](../README.md)
