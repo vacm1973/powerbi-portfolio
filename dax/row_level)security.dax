@@ -1,0 +1,3 @@
+-- Seguridad Dinámica a Nivel de Fila (RLS)
+-- Restringe la visualización de datos según el correo del usuario autenticado en Power BI Service
+[UserEmail] = USERPRINCIPALNAME()
