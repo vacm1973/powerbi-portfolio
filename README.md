@@ -1,6 +1,3 @@
-[← Back to Main Profile](https://github.com/vacm1973/vacm1973)
-
----
 
 # 📊 Power BI & Advanced Business Intelligence Portfolio
 
@@ -35,3 +32,12 @@ powerbi-portfolio/
 │   └── insert_dummy_data.sql
 └── powerquery/             # ETL cleaning and transformation scripts (M Query)
     └── logistics_transformations.pq
+
+---
+
+**Victor Andres Costa Molina**
+
+Senior Data Engineer | BI & Data Architecture
+
+[GitHub Profile](https://github.com/vacm1973)
+
