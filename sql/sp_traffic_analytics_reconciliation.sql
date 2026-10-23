@@ -8,141 +8,144 @@ Author: Victor Andres Costa Molina
 ===============================================================================
 */
 
--- 1. DATABASE SCHEMA CREATION (DDL)
--------------------------------------------------------------------------------
-IF OBJECT_ID('dbo.FactOperacionesTrafico', 'U') IS NOT NULL DROP TABLE dbo.FactOperacionesTrafico;
-IF OBJECT_ID('dbo.DM_CLIENTE', 'U') IS NOT NULL DROP TABLE dbo.DM_CLIENTE;
+USE [DataWarehouse_Analytics];
 GO
 
-CREATE TABLE dbo.DM_CLIENTE (
-    IdCliente INT PRIMARY KEY,
-    NombreCliente VARCHAR(255) NOT NULL,
-    CanalVenta VARCHAR(100) NOT NULL,
-    FechaAlta DATE DEFAULT GETDATE()
+-- 1. DATABASE SCHEMA CREATION (DDL)
+-------------------------------------------------------------------------------
+IF OBJECT_ID('dbo.FactTransportOperations', 'U') IS NOT NULL DROP TABLE dbo.FactTransportOperations;
+IF OBJECT_ID('dbo.DimCustomer', 'U') IS NOT NULL DROP TABLE dbo.DimCustomer;
+GO
+
+CREATE TABLE dbo.DimCustomer (
+    CustomerID INT PRIMARY KEY,
+    CustomerName VARCHAR(255) NOT NULL,
+    SalesChannel VARCHAR(100) NOT NULL,
+    CreatedDate DATE DEFAULT GETDATE()
 );
 
-CREATE TABLE dbo.FactOperacionesTrafico (
-    IdOperacion INT PRIMARY KEY IDENTITY(1,1),
-    FechaOperacion DATE NOT NULL,
-    IdCliente INT NOT NULL,
-    IdRuta INT NOT NULL,
-    CantidadParadas INT DEFAULT 1,
-    IngresoBruto DECIMAL(18,2) NOT NULL,
-    CostoFlete DECIMAL(18,2) NOT NULL,
-    EstadoOperacion VARCHAR(50) NOT NULL,
+CREATE TABLE dbo.FactTransportOperations (
+    OperationID INT PRIMARY KEY IDENTITY(1,1),
+    OperationDate DATE NOT NULL,
+    CustomerID INT NOT NULL,
+    RouteID INT NOT NULL,
+    StopsCount INT DEFAULT 1,
+    GrossRevenue DECIMAL(18,2) NOT NULL,
+    FreightCost DECIMAL(18,2) NOT NULL,
+    OperationStatus VARCHAR(50) NOT NULL,
     IsActive BIT DEFAULT 1,
-    CONSTRAINT FK_FactOperaciones_Cliente FOREIGN KEY (IdCliente) REFERENCES dbo.DM_CLIENTE(IdCliente)
+    CONSTRAINT FK_FactTransportOperations_Customer FOREIGN KEY (CustomerID) REFERENCES dbo.DimCustomer(CustomerID)
 );
 GO
 
 -- 2. MOCK DATA INSERTION (DML)
 -------------------------------------------------------------------------------
-INSERT INTO dbo.DM_CLIENTE (IdCliente, NombreCliente, CanalVenta) VALUES
-(101, 'Logística Distribución SA', 'Retail'),
-(102, 'Transportes del Norte SRL', 'Wholesale'),
-(103, 'Comercializadora Global', 'Direct-to-Consumer'),
-(104, 'Operador Logístico Central', 'Retail');
+INSERT INTO dbo.DimCustomer (CustomerID, CustomerName, SalesChannel) VALUES
+(101, 'Logistics Distribution Corp', 'Retail'),
+(102, 'Northern Transport LLC', 'Wholesale'),
+(103, 'Global Trading Co', 'Direct-to-Consumer'),
+(104, 'Central Logistics Operator', 'Retail');
 
-INSERT INTO dbo.FactOperacionesTrafico 
-(FechaOperacion, IdCliente, IdRuta, CantidadParadas, IngresoBruto, CostoFlete, EstadoOperacion) 
+INSERT INTO dbo.FactTransportOperations 
+(OperationDate, CustomerID, RouteID, StopsCount, GrossRevenue, FreightCost, OperationStatus) 
 VALUES
-('2026-10-01', 101, 501, 3, 150000.00, 95000.00, 'COMPLETADO'),
-('2026-10-02', 101, 502, 1, 80000.00, 50000.00, 'COMPLETADO'),
-('2026-10-03', 102, 503, 4, 320000.00, 210000.00, 'COMPLETADO'),
-('2026-10-04', 103, 504, 2, 45000.00, 48000.00, 'COMPLETADO'),
-('2026-10-05', 104, 505, 5, 210000.00, 130000.00, 'COMPLETADO'),
-('2026-10-06', 102, 506, 2, 110000.00, 70000.00, 'CANCELADO');
+('2026-10-01', 101, 501, 3, 150000.00, 95000.00, 'COMPLETED'),
+('2026-10-02', 101, 502, 1, 80000.00, 50000.00, 'COMPLETED'),
+('2026-10-03', 102, 503, 4, 320000.00, 210000.00, 'COMPLETED'),
+('2026-10-04', 103, 504, 2, 45000.00, 48000.00, 'COMPLETED'),
+('2026-10-05', 104, 505, 5, 210000.00, 130000.00, 'COMPLETED'),
+('2026-10-06', 102, 506, 2, 110000.00, 70000.00, 'CANCELLED');
 GO
 
 -- 3. ANALYTICAL VIEW CREATION
 -------------------------------------------------------------------------------
-IF OBJECT_ID('dbo.VW_FACT_TRAFICO_PRESENTACION', 'V') IS NOT NULL 
-    DROP VIEW dbo.VW_FACT_TRAFICO_PRESENTACION;
+IF OBJECT_ID('dbo.VW_FACT_TRAFFIC_PRESENTATION', 'V') IS NOT NULL 
+    DROP VIEW dbo.VW_FACT_TRAFFIC_PRESENTATION;
 GO
 
-CREATE VIEW dbo.VW_FACT_TRAFICO_PRESENTACION
+CREATE VIEW dbo.VW_FACT_TRAFFIC_PRESENTATION
 AS
 SELECT 
-    t.IdOperacion,
-    t.FechaOperacion,
-    t.IdCliente,
-    c.NombreCliente,
-    c.CanalVenta,
-    t.IdRuta,
-    t.CantidadParadas,
-    t.IngresoBruto,
-    t.CostoFlete,
-    (t.IngresoBruto - t.CostoFlete) AS MargenBruto,
+    t.OperationID,
+    t.OperationDate,
+    t.CustomerID,
+    c.CustomerName,
+    c.SalesChannel,
+    t.RouteID,
+    t.StopsCount,
+    t.GrossRevenue,
+    t.FreightCost,
+    (t.GrossRevenue - t.FreightCost) AS GrossMargin,
     CASE 
-        WHEN t.IngresoBruto > 0 THEN ROUND(((t.IngresoBruto - t.CostoFlete) / t.IngresoBruto) * 100, 2)
+        WHEN t.GrossRevenue > 0 THEN ROUND(((t.GrossRevenue - t.FreightCost) / t.GrossRevenue) * 100, 2)
         ELSE 0 
-    END AS PorcentajeMargen
-FROM dbo.FactOperacionesTrafico AS t WITH (NOLOCK)
-INNER JOIN dbo.DM_CLIENTE AS c WITH (NOLOCK) 
-    ON t.IdCliente = c.IdCliente
-WHERE t.EstadoOperacion = 'COMPLETADO';
+    END AS MarginPercentage
+FROM dbo.FactTransportOperations AS t WITH (NOLOCK)
+INNER JOIN dbo.DimCustomer AS c WITH (NOLOCK) 
+    ON t.CustomerID = c.CustomerID
+WHERE t.OperationStatus = 'COMPLETED';
 GO
 
 -- 4. STORED PROCEDURE CREATION
 -------------------------------------------------------------------------------
-IF OBJECT_ID('dbo.SP_TRAFICO_PRESENTACION', 'P') IS NOT NULL 
-    DROP PROCEDURE dbo.SP_TRAFICO_PRESENTACION;
+IF OBJECT_ID('dbo.SP_TRAFFIC_PRESENTATION', 'P') IS NOT NULL 
+    DROP PROCEDURE dbo.SP_TRAFFIC_PRESENTATION;
 GO
 
-CREATE PROCEDURE dbo.SP_TRAFICO_PRESENTACION
-    @FechaInicio DATE,
-    @FechaFin DATE,
-    @CanalVenta VARCHAR(100) = NULL
+CREATE PROCEDURE dbo.SP_TRAFFIC_PRESENTATION
+    @StartDate DATE,
+    @EndDate DATE,
+    @SalesChannel VARCHAR(100) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    CREATE TABLE #TempTraficoResumen (
-        IdCliente INT,
-        NombreCliente VARCHAR(255),
-        CanalVenta VARCHAR(100),
-        TotalOperaciones INT,
-        TotalIngreso DECIMAL(18, 2),
-        TotalCosto DECIMAL(18, 2),
-        TotalMargen DECIMAL(18, 2)
+    CREATE TABLE #TempTrafficSummary (
+        CustomerID INT,
+        CustomerName VARCHAR(255),
+        SalesChannel VARCHAR(100),
+        TotalOperations INT,
+        TotalRevenue DECIMAL(18, 2),
+        TotalCost DECIMAL(18, 2),
+        TotalMargin DECIMAL(18, 2)
     );
 
-    INSERT INTO #TempTraficoResumen (IdCliente, NombreCliente, CanalVenta, TotalOperaciones, TotalIngreso, TotalCosto, TotalMargen)
+    INSERT INTO #TempTrafficSummary (CustomerID, CustomerName, SalesChannel, TotalOperations, TotalRevenue, TotalCost, TotalMargin)
     SELECT 
-        v.IdCliente,
-        v.NombreCliente,
-        v.CanalVenta,
-        COUNT(DISTINCT v.IdOperacion) AS TotalOperaciones,
-        SUM(v.IngresoBruto) AS TotalIngreso,
-        SUM(v.CostoFlete) AS TotalCosto,
-        SUM(v.MargenBruto) AS TotalMargen
-    FROM dbo.VW_FACT_TRAFICO_PRESENTACION AS v
-    WHERE v.FechaOperacion BETWEEN @FechaInicio AND @FechaFin
-      AND (@CanalVenta IS NULL OR v.CanalVenta = @CanalVenta)
+        v.CustomerID,
+        v.CustomerName,
+        v.SalesChannel,
+        COUNT(DISTINCT v.OperationID) AS TotalOperations,
+        SUM(v.GrossRevenue) AS TotalRevenue,
+        SUM(v.FreightCost) AS TotalCost,
+        SUM(v.GrossMargin) AS TotalMargin
+    FROM dbo.VW_FACT_TRAFFIC_PRESENTATION AS v
+    WHERE v.OperationDate BETWEEN @StartDate AND @EndDate
+      AND (@SalesChannel IS NULL OR v.SalesChannel = @SalesChannel)
     GROUP BY 
-        v.IdCliente,
-        v.NombreCliente,
-        v.CanalVenta;
+        v.CustomerID,
+        v.CustomerName,
+        v.SalesChannel;
 
     SELECT 
-        r.IdCliente,
-        r.NombreCliente,
-        r.CanalVenta,
-        r.TotalOperaciones,
-        r.TotalIngreso,
-        r.TotalCosto,
-        r.TotalMargen,
+        r.CustomerID,
+        r.CustomerName,
+        r.SalesChannel,
+        r.TotalOperations,
+        r.TotalRevenue,
+        r.TotalCost,
+        r.TotalMargin,
         CASE 
-            WHEN r.TotalIngreso > 0 THEN ROUND((r.TotalMargen / r.TotalIngreso) * 100, 2)
+            WHEN r.TotalRevenue > 0 THEN ROUND((r.TotalMargin / r.TotalRevenue) * 100, 2)
             ELSE 0 
-        END AS PorcentajeMargenConsolidado
-    FROM #TempTraficoResumen AS r
-    ORDER BY r.TotalMargen DESC;
+        END AS ConsolidatedMarginPct
+    FROM #TempTrafficSummary AS r
+    ORDER BY r.TotalMargin DESC;
 
-    DROP TABLE #TempTraficoResumen;
+    DROP TABLE #TempTrafficSummary;
 END;
 GO
 
 -- 5. TEST EXECUTION SCRIPT
 -------------------------------------------------------------------------------
--- EXEC dbo.SP_TRAFICO_PRESENTACION @FechaInicio = '2026-10-01', @FechaFin = '2026-10-31';
+-- EXEC dbo.SP_TRAFFIC_PRESENTATION @StartDate = '2026-10-01', @EndDate = '2026-10-31';

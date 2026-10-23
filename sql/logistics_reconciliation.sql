@@ -13,31 +13,31 @@ GO
 
 WITH OperationalBaselines AS (
     SELECT 
-        t.IdOperacion,
-        t.FechaOperacion,
-        c.NombreCliente,
-        c.CanalVenta,
-        t.IngresoBruto,
-        t.CostoFlete,
-        (t.IngresoBruto - t.CostoFlete) AS MargenBruto,
-        AVG(t.CostoFlete) OVER(PARTITION BY c.CanalVenta) AS AverageChannelFreightCost,
-        SUM(t.IngresoBruto) OVER(PARTITION BY t.IdCliente) AS TotalClientGrossRevenue
-    FROM dbo.FactOperacionesTrafico AS t WITH (NOLOCK)
-    INNER JOIN dbo.DM_CLIENTE AS c WITH (NOLOCK) 
-        ON t.IdCliente = c.IdCliente
-    WHERE t.EstadoOperacion = 'COMPLETADO'
+        t.OperationID,
+        t.OperationDate,
+        c.CustomerName,
+        c.SalesChannel,
+        t.GrossRevenue,
+        t.FreightCost,
+        (t.GrossRevenue - t.FreightCost) AS GrossMargin,
+        AVG(t.FreightCost) OVER(PARTITION BY c.SalesChannel) AS AvgChannelFreightCost,
+        SUM(t.GrossRevenue) OVER(PARTITION BY t.CustomerID) AS TotalCustomerGrossRevenue
+    FROM dbo.FactTransportOperations AS t WITH (NOLOCK)
+    INNER JOIN dbo.DimCustomer AS c WITH (NOLOCK) 
+        ON t.CustomerID = c.CustomerID
+    WHERE t.OperationStatus = 'COMPLETED'
 )
 SELECT 
-    b.IdOperacion,
-    b.FechaOperacion,
-    b.NombreCliente,
-    b.CanalVenta,
-    b.IngresoBruto,
-    b.CostoFlete,
-    b.MargenBruto,
-    ROUND(b.AverageChannelFreightCost, 2) AS CostoPromedioCanal,
-    ROUND(b.CostoFlete - b.AverageChannelFreightCost, 2) AS DesviacionFleteVsPromedio,
-    ROUND((b.MargenBruto / NULLIF(b.TotalClientGrossRevenue, 0)) * 100, 2) AS ContribucionMargenSobreClientePct
+    b.OperationID,
+    b.OperationDate,
+    b.CustomerName,
+    b.SalesChannel,
+    b.GrossRevenue,
+    b.FreightCost,
+    b.GrossMargin,
+    ROUND(b.AvgChannelFreightCost, 2) AS AvgChannelFreightCost,
+    ROUND(b.FreightCost - b.AvgChannelFreightCost, 2) AS FreightVarianceVsAvg,
+    ROUND((b.GrossMargin / NULLIF(b.TotalCustomerGrossRevenue, 0)) * 100, 2) AS CustomerMarginContributionPct
 FROM OperationalBaselines b
-ORDER BY DesviacionFleteVsPromedio DESC;
+ORDER BY FreightVarianceVsAvg DESC;
 GO
