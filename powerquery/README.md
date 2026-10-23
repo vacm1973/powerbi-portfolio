@@ -2,9 +2,9 @@
 
 ---
 
-### 1. Power Query / M Transformations (`/power_query`)
+### 1. Power Query / M Transformations (`/powerquery`)
 
-* **Directory:** [`/power_query`](./powerquery)
+* **Directory:** [`/powerquery`](./powerquery)
 * **Technical Rationale & Purpose:**
   Contains production-ready Power Query (M) scripts used to extract, clean, normalize, and dynamic-unpivot heterogeneous raw sources before loading them into the Power BI semantic model.
 * **Included Artifacts:**
