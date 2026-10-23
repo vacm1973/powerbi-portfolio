@@ -1,0 +1,64 @@
+/*
+===============================================================================
+DAX Calculations & Advanced Time Intelligence
+Description: Production-ready DAX measures implementing time intelligence,
+             context manipulation, moving averages, and dynamic KPI calculations.
+Author: Victor Andres Costa Molina
+===============================================================================
+*/
+
+// 1. Total Revenue (Base Measure)
+[Total Revenue] = 
+SUM ( 'FactSales'[GrossRevenue] )
+
+// 2. Year-to-Date (YTD) Revenue with Date Context Guard
+[Revenue YTD] = 
+VAR MaxDateWithData = MAX ( 'FactSales'[OrderDate] )
+VAR CurrentDate = MAX ( 'DimDate'[Date] )
+RETURN
+IF (
+    CurrentDate <= MaxDateWithData,
+    TOTALYTD ( [Total Revenue], 'DimDate'[Date] ),
+    BLANK ()
+)
+
+// 3. Same Period Last Year (SPLY) & Year-over-Year Growth %
+[Revenue SPLY] = 
+CALCULATE (
+    [Total Revenue],
+    SAMEPERIODLASTYEAR ( 'DimDate'[Date] )
+)
+
+[Revenue YoY Growth %] = 
+VAR RevenueCurrent = [Total Revenue]
+VAR RevenuePrior = [Revenue SPLY]
+RETURN
+DIVIDE ( RevenueCurrent - RevenuePrior, RevenuePrior, 0 )
+
+// 4. 3-Month Rolling Average Revenue
+[Revenue 3M Rolling Avg] = 
+VAR LastSelectedDate = MAX ( 'DimDate'[Date] )
+VAR PeriodInDays = 90
+VAR RollingPeriod = 
+    DATESINPERIOD (
+        'DimDate'[Date],
+        LastSelectedDate,
+        -PeriodInDays,
+        DAY
+    )
+RETURN
+CALCULATE (
+    AVERAGEX ( 'DimDate', [Total Revenue] ),
+    RollingPeriod
+)
+
+// 5. Dynamic Customer Revenue Contribution % (Ignoring Local Filters)
+[Customer Revenue Contribution %] = 
+VAR IndividualCustomerRevenue = [Total Revenue]
+VAR AllCustomersRevenue = 
+    CALCULATE (
+        [Total Revenue],
+        ALLSELECTED ( 'DimCustomer' )
+    )
+RETURN
+DIVIDE ( IndividualCustomerRevenue, AllCustomersRevenue, 0 )

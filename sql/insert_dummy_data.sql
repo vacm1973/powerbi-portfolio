@@ -1,86 +1,38 @@
--- =====================================================================
--- Project: Dummy Data Generation Script
--- Engine: T-SQL / SQL Server
--- Description: Populates mock tables to test the logistics SQL scripts 
---              and DAX time intelligence measures.
--- =====================================================================
+/*
+===============================================================================
+Database Analytics & T-SQL ETL Pipeline - Mock Data Setup
+Description: Generates robust relational mock data for DM_CLIENTE and 
+             FactOperacionesTrafico to enable local testing of SQL procedures 
+             and Power BI / DAX measures.
+Author: Victor Andres Costa Molina
+===============================================================================
+*/
 
--- 1. Clean up existing objects if present
-IF OBJECT_ID('dbo.LogisticsTransactions', 'U') IS NOT NULL DROP TABLE dbo.LogisticsTransactions;
-IF OBJECT_ID('dbo.ContractsMaster', 'U') IS NOT NULL DROP TABLE dbo.ContractsMaster;
-IF OBJECT_ID('dbo.RawShipmentLogs', 'U') IS NOT NULL DROP TABLE dbo.RawShipmentLogs;
-IF OBJECT_ID('dbo.Calendar', 'U') IS NOT NULL DROP TABLE dbo.Calendar;
+USE [DataWarehouse_Analytics];
+GO
 
--- 2. Create Calendar dimension table for DAX Time Intelligence
-CREATE TABLE dbo.Calendar (
-    [Date] DATE PRIMARY KEY,
-    [Year] INT,
-    [Month] INT,
-    [MonthName] VARCHAR(20),
-    [Quarter] INT
-);
+-- Clean up existing mock records
+DELETE FROM dbo.FactOperacionesTrafico;
+DELETE FROM dbo.DM_CLIENTE;
+GO
 
--- Populate dummy calendar (Years 2024 to 2026)
-DECLARE @StartDate DATE = '2024-01-01';
-DECLARE @EndDate DATE = '2026-12-31';
+-- Populate Dimension Table: DM_CLIENTE
+INSERT INTO dbo.DM_CLIENTE (IdCliente, NombreCliente, CanalVenta, FechaAlta) VALUES
+(101, 'Logística Distribución SA', 'Retail', '2024-01-15'),
+(102, 'Transportes del Norte SRL', 'Wholesale', '2024-03-20'),
+(103, 'Comercializadora Global', 'Direct-to-Consumer', '2024-06-10'),
+(104, 'Operador Logístico Central', 'Retail', '2025-01-05');
 
-WHILE @StartDate <= @EndDate
-BEGIN
-    INSERT INTO dbo.Calendar ([Date], [Year], [Month], [MonthName], [Quarter])
-    VALUES (
-        @StartDate,
-        YEAR(@StartDate),
-        MONTH(@StartDate),
-        DATENAME(month, @StartDate),
-        DATEPART(quarter, @StartDate)
-    );
-    SET @StartDate = DATEADD(day, 1, @StartDate);
-END
-
--- 3. Create RawShipmentLogs table (For transformation script)
-CREATE TABLE dbo.RawShipmentLogs (
-    ShipmentTrackingNumber VARCHAR(50),
-    OriginHub VARCHAR(100),
-    DestinationHub VARCHAR(100),
-    PackageWeightKg DECIMAL(10,2),
-    VolumeCBM DECIMAL(10,4),
-    DispatchTimestamp DATETIME,
-    DeliveryTimestamp DATETIME,
-    DeliveryStatus VARCHAR(50),
-    RecordStatus VARCHAR(20)
-);
-
--- Insert dummy test records (including nulls to test data quality handling)
-INSERT INTO dbo.RawShipmentLogs VALUES 
-('TRK-1001', 'Buenos Aires Hub', 'Cordoba Hub', 45.50, 0.2500, '2025-01-10 08:30:00', '2025-01-11 14:00:00', 'Delivered On Time', 'Active'),
-('TRK-1002', 'Rosario Hub', 'Mendoza Hub', 120.00, 1.1500, '2025-01-12 09:00:00', '2025-01-14 18:30:00', 'Delayed', 'Active'),
-('TRK-1003', 'Buenos Aires Hub', 'Mar del Plata Hub', 12.30, 0.0500, '2025-01-15 10:15:00', '2025-01-15 19:00:00', 'Delivered On Time', 'Active'),
-('TRK-1004', 'Cordoba Hub', 'Salta Hub', NULL, NULL, '2025-02-01 07:00:00', '2025-02-03 12:00:00', 'Delivered On Time', 'Active');
-
--- 4. Create tables for Freight Reconciliation
-CREATE TABLE dbo.ContractsMaster (
-    CarrierID VARCHAR(20),
-    RouteID VARCHAR(20),
-    AgreedRate DECIMAL(10,2),
-    EffectiveDate DATE
-);
-
-INSERT INTO dbo.ContractsMaster VALUES
-('CARRIER_A', 'ROUTE_01', 1500.00, '2024-01-01'),
-('CARRIER_B', 'ROUTE_02', 2200.50, '2024-01-01'),
-('CARRIER_A', 'ROUTE_01', 1600.00, '2025-01-01'); -- Updated rate for 2025
-
-CREATE TABLE dbo.LogisticsTransactions (
-    InvoiceID VARCHAR(50),
-    CarrierID VARCHAR(20),
-    RouteID VARCHAR(20),
-    ShipmentDate DATE,
-    BilledAmount DECIMAL(10,2),
-    ContractRate DECIMAL(10,2),
-    Status VARCHAR(20)
-);
-
-INSERT INTO dbo.LogisticsTransactions VALUES
-('INV-9001', 'CARRIER_A', 'ROUTE_01', '2025-01-10', 1600.00, 1600.00, 'Processed'),
-('INV-9002', 'CARRIER_B', 'ROUTE_02', '2025-01-12', 2350.00, 2200.50, 'Processed'), -- Overbilled case
-('INV-9003', 'CARRIER_A', 'ROUTE_01', '2025-01-15', 1500.00, 1600.00, 'Processed'); -- Underbilled case
+-- Populate Fact Table: FactOperacionesTrafico
+INSERT INTO dbo.FactOperacionesTrafico 
+(FechaOperacion, IdCliente, IdRuta, CantidadParadas, IngresoBruto, CostoFlete, EstadoOperacion, IsActive) 
+VALUES
+('2026-10-01', 101, 501, 3, 150000.00, 95000.00, 'COMPLETADO', 1),
+('2026-10-02', 101, 502, 1, 80000.00, 50000.00, 'COMPLETADO', 1),
+('2026-10-03', 102, 503, 4, 320000.00, 210000.00, 'COMPLETADO', 1),
+('2026-10-04', 103, 504, 2, 45000.00, 48000.00, 'COMPLETADO', 1),
+('2026-10-05', 104, 505, 5, 210000.00, 130000.00, 'COMPLETADO', 1),
+('2026-10-06', 102, 506, 2, 110000.00, 70000.00, 'CANCELADO', 0),
+('2026-10-07', 101, 507, 2, 190000.00, 115000.00, 'COMPLETADO', 1),
+('2026-10-08', 103, 508, 1, 65000.00, 40000.00, 'COMPLETADO', 1);
+GO

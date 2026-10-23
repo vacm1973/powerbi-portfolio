@@ -1,35 +1,43 @@
--- =====================================================================
--- Project: Automated Freight Invoice Reconciliation
--- Engine: T-SQL / SQL Server
--- Description: Uses CTEs and window functions to compare billed freight 
---              invoices against pre-established carrier contracts.
--- =====================================================================
+/*
+===============================================================================
+Database Analytics & T-SQL ETL Pipeline - Operational Variance Audit
+Description: Automated variance analysis script utilizing CTEs and Window Functions 
+             (AVG, SUM OVER) to audit trip costs and margins per client channel 
+             against historical baseline averages.
+Author: Victor Andres Costa Molina
+===============================================================================
+*/
 
-WITH LatestContractRates AS (
+USE [DataWarehouse_Analytics];
+GO
+
+WITH OperationalBaselines AS (
     SELECT 
-        CarrierID,
-        RouteID,
-        AgreedRate,
-        EffectiveDate,
-        ROW_NUMBER() OVER (PARTITION BY CarrierID, RouteID ORDER BY EffectiveDate DESC) as rn
-    FROM ContractsMaster
+        t.IdOperacion,
+        t.FechaOperacion,
+        c.NombreCliente,
+        c.CanalVenta,
+        t.IngresoBruto,
+        t.CostoFlete,
+        (t.IngresoBruto - t.CostoFlete) AS MargenBruto,
+        AVG(t.CostoFlete) OVER(PARTITION BY c.CanalVenta) AS AverageChannelFreightCost,
+        SUM(t.IngresoBruto) OVER(PARTITION BY t.IdCliente) AS TotalClientGrossRevenue
+    FROM dbo.FactOperacionesTrafico AS t WITH (NOLOCK)
+    INNER JOIN dbo.DM_CLIENTE AS c WITH (NOLOCK) 
+        ON t.IdCliente = c.IdCliente
+    WHERE t.EstadoOperacion = 'COMPLETADO'
 )
 SELECT 
-    t.InvoiceID,
-    t.CarrierID,
-    t.RouteID,
-    t.ShipmentDate,
-    t.BilledAmount,
-    c.AgreedRate,
-    (t.BilledAmount - c.AgreedRate) AS CostVariance,
-    CASE 
-        WHEN t.BilledAmount > c.AgreedRate THEN 'Overbilled'
-        WHEN t.BilledAmount < c.AgreedRate THEN 'Underbilled'
-        ELSE 'Matched'
-    END AS ReconciliationStatus
-FROM LogisticsTransactions t
-INNER JOIN LatestContractRates c 
-    ON t.CarrierID = c.CarrierID 
-    AND t.RouteID = c.RouteID 
-    AND c.rn = 1
-WHERE t.Status = 'Processed';
+    b.IdOperacion,
+    b.FechaOperacion,
+    b.NombreCliente,
+    b.CanalVenta,
+    b.IngresoBruto,
+    b.CostoFlete,
+    b.MargenBruto,
+    ROUND(b.AverageChannelFreightCost, 2) AS CostoPromedioCanal,
+    ROUND(b.CostoFlete - b.AverageChannelFreightCost, 2) AS DesviacionFleteVsPromedio,
+    ROUND((b.MargenBruto / NULLIF(b.TotalClientGrossRevenue, 0)) * 100, 2) AS ContribucionMargenSobreClientePct
+FROM OperationalBaselines b
+ORDER BY DesviacionFleteVsPromedio DESC;
+GO
