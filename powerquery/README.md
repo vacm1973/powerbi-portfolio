@@ -1,8 +1,14 @@
-# 📂 Power Query (M Language) ETL Workflows
+## 📂 Repository Structure & Key Components
 
-This directory contains Power Query transformation scripts used to clean, filter, and structure raw source data before loading it into the Power BI semantic model.
-Welcome to this repository. This space consolidates advanced solutions for **Business Intelligence, Data Modeling, and ETL Pipelines**, developed using industry best practices.
+---
 
-## 📄 Included Files:
-- **`logistics_transformations.pq`**: ETL script filtering active records, removing billing nulls, normalizing text case, and preparing core columns for reporting.
+### 1. Power Query / M Transformations (`/power_query`)
+
+* **Directory:** [`/power_query`](./power_query)
+* **Technical Rationale & Purpose:**
+  Contains production-ready Power Query (M) scripts used to extract, clean, normalize, and dynamic-unpivot heterogeneous raw sources before loading them into the Power BI semantic model.
+* **Included Artifacts:**
+  * [`advanced_etl_pipeline.pq`](./power_query/advanced_etl_pipeline.pq): Advanced M transformation pipeline implementing dynamic unpivoting, null value imputation, custom profitability tiers, and string normalization for dimensional star-schema modeling.
+
+---
 [← Back to Main Repository](../README.md)
